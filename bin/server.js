@@ -135,7 +135,36 @@ var renderMarkdownAsSlides = function(req, res) {
     }
 };
 
+var _ = require('lodash')
+var processCraftmlBlock = function(input){
+  return _.replace(input, /```craftml([\r\n]|.)*?```/g, function(r){
+     var code = r.match(/```craftml(([\r\n]|.)*?)```/)[1]
+     code = code.trim()
+     //var src = 'https://craftml.io/version@1.5.0/v?content=' + encodeURIComponent(code)
+     var src = 'http://localhost:3000/version@1.5.1-SNAPSHOT/v?content=' + encodeURIComponent(code) + '&fontSize=20'
+    return '<!-- .slide: data-transition="zoom" -->\n\n' + // zoom transition does not lag
+     '<iframe data-src="' + src + '" width="1200" height="600" frameborder="0" ></iframe>'
+  })
+}
+
+var processCraftmlIOLink = function(input){
+  return _.replace(input, /\[craftml.io\]\([^\)]+?\)/g, function(r){
+    // console.log('r', r)
+     var sid = r.match(/\[craftml.io\]\(([^\)]+?)\)/)[1]
+    //  console.log('sid',sid)
+    //  code = code.trim()
+     var src = 'https://craftml.io/version@1.5.0/embed/' + sid
+    //  var src = 'http://localhost:3000/version@1.5.1-SNAPSHOT/v?content=' + encodeURIComponent(code) + '&fontSize=20'
+    return '<!-- .slide: data-transition="zoom" -->\n\n' + // zoom transition does not lag
+      '<iframe data-src="' + src + '" width="1200" height="600" frameborder="0" ></iframe>'
+  })
+}
+
 var render = function(res, markdown) {
+  // console.log('markdown', markdown)
+  markdown = processCraftmlIOLink(markdown)
+  markdown = processCraftmlBlock(markdown)
+
     var slides = md.slidify(markdown, opts);
 
     res.send(Mustache.to_html(opts.template, {
